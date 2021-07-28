@@ -197,5 +197,4 @@ def processTasks(file_path, additional_variables, command_line_args=sys.argv):
 
 
 import sys
-print('__name__', __name__)
 sys.modules[__name__] = processTasks
