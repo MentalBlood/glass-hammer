@@ -65,11 +65,11 @@ def watch(watch_functions, stop_when_values, delay, additional_variables):
 		**additional_variables
 	}
 
-	max_function_description_length = max(map(lambda w_f: len(w_f[0]), watch_functions))
+	max_function_description_length = max(map(len, watch_functions.keys()))
 	bars = [
 		tqdm(
 			total=int(stop_when_values[name]),
-			desc=appendSpaces(name, max_function_description_length),
+			desc=appendSpaces(name, max_function_description_length + 1),
 		)
 		for name in watch_functions.keys()
 	]
