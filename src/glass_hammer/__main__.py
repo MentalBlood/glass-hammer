@@ -24,9 +24,7 @@ try:
 		module_name: input_variables_module
 	}
 except Exception as e:
-	print(e)
 	additional_variables = {}
-print('additional_variables', additional_variables)
 
 
 processTasks(args.tasks, additional_variables, args.server)
