@@ -5,23 +5,12 @@ import json
 import argparse
 import requests
 import subprocess
-import importlib.util
 from tqdm.auto import tqdm
 from types import FunctionType
 from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
-from common import addresses
-
-
-
-def importModuleFromPath(name, path):
-	
-	spec = importlib.util.spec_from_file_location(name, path)
-	module = importlib.util.module_from_spec(spec)
-	spec.loader.exec_module(module)
-
-	return module
+from glass_hammer.common import importModuleFromPath
 
 
 
@@ -29,7 +18,7 @@ def appendSpaces(s, max_length):
 	return s + ' ' * (max_length - len(s))
 
 
-def updateBarsOnVizualizationServer(bars):
+def updateBarsOnVizualizationServer(bars, address):
 
 	bars_info = {b.desc.strip(): {
 		'current': b.n,
@@ -45,7 +34,7 @@ def updateBarsOnVizualizationServer(bars):
 	}
 	
 	requests.post(
-		f"{addresses.vizualization_server['address']}/set",
+		f"{address}/set",
 		headers={
 			'content-type': 'application/json; charset=utf-8',
 			'Access-Control-Allow-Origin': '*'
@@ -59,12 +48,7 @@ def getDelta(chart_data, field_name, current):
 	return current - last
 
 
-def watch(watch_functions, stop_when_values, delay, additional_variables):
-	
-	global_variables = {
-		**globals(), 
-		**additional_variables
-	}
+def watch(watch_functions, stop_when_values, delay, additional_variables, vizualization_server_address):
 
 	max_function_description_length = max(map(len, watch_functions.keys()))
 	bars = [
@@ -99,7 +83,8 @@ def watch(watch_functions, stop_when_values, delay, additional_variables):
 				'average_speed': getDelta(bars[i].chart_data, 'current', current_current) / (getDelta(bars[i].chart_data, 'elapsed', current_elapsed) + 0.0001)
 			})
 		
-		updateBarsOnVizualizationServer(bars)
+		if vizualization_server_address:
+			updateBarsOnVizualizationServer(bars, vizualization_server_address)
 		
 		if all(map(lambda b: b.n == b.total, bars)):
 			break
@@ -119,7 +104,7 @@ def closeWindows(names):
 			os.system(f'taskkill /F /FI "WindowTitle eq {n}" /T > nul')
 
 
-def processTask(task, input_variables):
+def processTask(task, input_variables, vizualization_server_address):
 	
 	additional_variables = input_variables
 
@@ -143,7 +128,13 @@ def processTask(task, input_variables):
 	if 'watch_functions_file' in task:
 		watch_functions_module = importModuleFromPath('watch_functions_module', task['watch_functions_file'])
 		watch_functions = watch_functions_module.getWatchFunctions(init_result)
-		watch(watch_functions, task['stop_when_values'], task['delay'], additional_variables)
+		watch(
+			watch_functions, 
+			task['stop_when_values'], 
+			task['delay'], 
+			additional_variables, 
+			vizualization_server_address
+		)
 
 	if 'init_file' in task:
 		init_module.after(init_result)
@@ -164,7 +155,7 @@ def flattenRecursiveTasks(tasks):
 	return result
 
 
-def processTasks(file_path, additional_variables, command_line_args=sys.argv):
+def processTasks(file_path, additional_variables, vizualization_server_address, command_line_args=sys.argv):
 	
 	tasks_module = importModuleFromPath('tasks_module', file_path)
 	tasks_args_definition = tasks_module.args
@@ -193,7 +184,7 @@ def processTasks(file_path, additional_variables, command_line_args=sys.argv):
 	tasks = FunctionType(tasks_module.tasks.__code__, input_variables)()
 	flatten_tasks = flattenRecursiveTasks(tasks)
 	for t in flatten_tasks:
-		processTask(t, input_variables)
+		processTask(t, input_variables, vizualization_server_address)
 
 
 import sys
