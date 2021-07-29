@@ -116,13 +116,14 @@ def processTask(task, input_variables, vizualization_server_address):
 	if 'commands_to_execute' in task:
 		commands_to_execute = task['commands_to_execute']
 		for c in commands_to_execute:
-			print(f'executing command "{c}"')
 			if type(c) == str:
+				print(f'executing command "{c}"')
 				os.system(c)
 			elif type(c) == dict:
 				command = c['command']
 				window_name = c['window_name']
 				after_command = "timeout -1" if 'dont close' in c else "exit"
+				print(f'executing command "{command}" in new window "{window_name}"')
 				os.system(f'start "{window_name}" cmd /c "{command} & {after_command}"')
 
 	if 'watch_functions_file' in task:
