@@ -126,7 +126,7 @@ def processTask(task, input_variables):
 	if 'init_file' in task:
 		init_module = importModuleFromPath('init_module', task['init_file'])
 		init_result = init_module.init()
-		additional_variables = {**additional_variables, **init_module.__dict__, **init_result}
+		additional_variables = {**additional_variables, **init_result}
 
 	if 'commands_to_execute' in task:
 		commands_to_execute = task['commands_to_execute']
@@ -143,7 +143,6 @@ def processTask(task, input_variables):
 	if 'watch_functions_file' in task:
 		watch_functions_module = importModuleFromPath('watch_functions_module', task['watch_functions_file'])
 		watch_functions = watch_functions_module.getWatchFunctions(init_result)
-		additional_variables = {**additional_variables, **watch_functions_module.__dict__}
 		watch(watch_functions, task['stop_when_values'], task['delay'], additional_variables)
 
 	if 'init_file' in task:
