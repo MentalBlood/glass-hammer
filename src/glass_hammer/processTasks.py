@@ -95,11 +95,12 @@ def watch(watch_functions, stop_when_values, delay, additional_variables, vizual
 		b.close()
 
 
-def closeWindows(names):
+def closeWindows(names, max_delay=None):
 	
 	for n in names:
-		if type(n) == dict:
-			os.system(f'timeout {n["delay"]} & taskkill /F /FI "WindowTitle eq {n["name"]}" /T > nul')
+		if (type(n) == dict) and (max_delay == None or max_delay > 0):
+			delay = max(n['delay'], max_delay)
+			os.system(f'timeout {delay} & taskkill /F /FI "WindowTitle eq {n["name"]}" /T > nul')
 		elif type(n) == str:
 			os.system(f'taskkill /F /FI "WindowTitle eq {n}" /T > nul')
 
@@ -129,13 +130,21 @@ def processTask(task, input_variables, vizualization_server_address):
 	if 'watch_functions_file' in task:
 		watch_functions_module = importModuleFromPath('watch_functions_module', task['watch_functions_file'])
 		watch_functions = watch_functions_module.getWatchFunctions(init_result)
-		watch(
-			watch_functions, 
-			task['stop_when_values'], 
-			task['delay'], 
-			additional_variables, 
-			vizualization_server_address
-		)
+		try:
+			watch(
+				watch_functions, 
+				task['stop_when_values'], 
+				task['delay'], 
+				additional_variables, 
+				vizualization_server_address
+			)
+		except KeyboardInterrupt:
+			if 'windows_to_close_names' in task:
+				closeWindows(
+					task['windows_to_close_names'],
+					max_delay=0
+				)
+			raise
 
 	if 'init_file' in task:
 		init_module.after(init_result)
