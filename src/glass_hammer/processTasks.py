@@ -8,6 +8,7 @@ import subprocess
 import importlib.util
 from tqdm.auto import tqdm
 from types import FunctionType
+from multiprocessing import cpu_count
 from multiprocessing.pool import ThreadPool
 
 from common import addresses
@@ -77,7 +78,7 @@ def watch(watch_functions, stop_when_values, delay, additional_variables):
 	for b in bars:
 		b.chart_data = []
 
-	threads_number = len(watch_functions)
+	threads_number = min(len(watch_functions), cpu_count())
 	
 	while True:
 
