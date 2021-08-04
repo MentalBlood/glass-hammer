@@ -107,6 +107,15 @@ def closeWindow(name, max_delay=None):
 		os.system(f'taskkill /F /FI "WindowTitle eq {name}" /T > nul')
 
 
+def closeWindows(names, max_delay=None):
+
+	threads_number = min(len(names), cpu_count())
+	ThreadPool(threads_number).map(
+		lambda w: closeWindow(w, max_delay=max_delay), 
+		list(names)
+	)
+
+
 def processTask(task, input_variables, vizualization_server_address):
 	
 	additional_variables = input_variables
@@ -194,12 +203,8 @@ def processTasks(file_path, additional_variables, vizualization_server_address, 
 		except KeyboardInterrupt:
 			for t in flatten_tasks[i:]:
 				if 'windows_to_close_names' in t:
-					threads_number = min(len(t['windows_to_close_names']), cpu_count())
-					ThreadPool(threads_number).map(
-						lambda w: closeWindow(w, max_delay=0), 
-						list(t['windows_to_close_names'])
-					)
-					# closeWindows(t['windows_to_close_names'], max_delay=0)
+					closeWindows(t['windows_to_close_names'])
+
 
 
 import sys
