@@ -203,7 +203,7 @@ def processTasks(file_path, additional_variables, vizualization_server_address, 
 		except KeyboardInterrupt:
 			for t in flatten_tasks[i:]:
 				if 'windows_to_close_names' in t:
-					closeWindows(t['windows_to_close_names'])
+					closeWindows(t['windows_to_close_names'], max_delay=0)
 
 
 
