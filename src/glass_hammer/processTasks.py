@@ -187,19 +187,20 @@ def processTasks(file_path, additional_variables, vizualization_server_address, 
 		for a in dir(tasks_args_namespace)
 		if not a.startswith('_')
 	}
-
-	input_variables = {
-		**tasks_args,
-		**additional_variables,
-		**globals()
-	}
 	
-	tasks = FunctionType(tasks_module.tasks.__code__, input_variables)()
+	tasks = FunctionType(tasks_module.tasks.__code__, {
+		**tasks_module.tasks.__globals__,
+		**tasks_args,
+		**additional_variables
+	})()
 	flatten_tasks = flattenRecursiveTasks(tasks)
 	for i in range(len(flatten_tasks)):
 		t = flatten_tasks[i]
 		try:
-			processTask(t, input_variables, vizualization_server_address)
+			processTask(t, {
+				**tasks_module.tasks.__globals__,
+				**additional_variables
+			}, vizualization_server_address)
 		except KeyboardInterrupt:
 			for t in flatten_tasks[i:]:
 				if 'windows_to_close_names' in t:
