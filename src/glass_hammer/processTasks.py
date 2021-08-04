@@ -98,7 +98,7 @@ def watch(watch_functions, stop_when_values, delay, additional_variables, vizual
 def closeWindows(names, max_delay=None):
 	
 	for n in names:
-		if (type(n) == dict) and max_delay:
+		if type(n) == dict:
 			delay = max(n['delay'], max_delay) if max_delay != None else n['delay']
 			os.system(f'timeout {delay} & taskkill /F /FI "WindowTitle eq {n["name"]}" /T > nul')
 		elif type(n) == str:
