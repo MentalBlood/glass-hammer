@@ -99,8 +99,11 @@ def closeWindows(names, max_delay=None):
 	
 	for n in names:
 		if type(n) == dict:
-			delay = max(n['delay'], max_delay) if max_delay != None else n['delay']
-			os.system(f'timeout {delay} & taskkill /F /FI "WindowTitle eq {n["name"]}" /T > nul')
+			delay = min(n['delay'], max_delay) if max_delay != None else n['delay']
+			if delay == 0:
+				os.system(f'taskkill /F /FI "WindowTitle eq {n["name"]}" /T > nul')
+			else:
+				os.system(f'timeout {delay} & taskkill /F /FI "WindowTitle eq {n["name"]}" /T > nul')
 		elif type(n) == str:
 			os.system(f'taskkill /F /FI "WindowTitle eq {n}" /T > nul')
 
