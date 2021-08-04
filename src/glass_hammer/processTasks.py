@@ -95,17 +95,16 @@ def watch(watch_functions, stop_when_values, delay, additional_variables, vizual
 		b.close()
 
 
-def closeWindows(names, max_delay=None):
+def closeWindow(name, max_delay=None):
 	
-	for n in names:
-		if type(n) == dict:
-			delay = min(n['delay'], max_delay) if max_delay != None else n['delay']
-			if delay == 0:
-				os.system(f'taskkill /F /FI "WindowTitle eq {n["name"]}" /T > nul')
-			else:
-				os.system(f'timeout {delay} & taskkill /F /FI "WindowTitle eq {n["name"]}" /T > nul')
-		elif type(n) == str:
-			os.system(f'taskkill /F /FI "WindowTitle eq {n}" /T > nul')
+	if type(name) == dict:
+		delay = min(name['delay'], max_delay) if max_delay != None else name['delay']
+		if delay == 0:
+			os.system(f'taskkill /F /FI "WindowTitle eq {name["name"]}" /T > nul')
+		else:
+			os.system(f'timeout {delay} & taskkill /F /FI "WindowTitle eq {name["name"]}" /T > nul')
+	elif type(name) == str:
+		os.system(f'taskkill /F /FI "WindowTitle eq {name}" /T > nul')
 
 
 def processTask(task, input_variables, vizualization_server_address):
@@ -195,7 +194,12 @@ def processTasks(file_path, additional_variables, vizualization_server_address, 
 		except KeyboardInterrupt:
 			for t in flatten_tasks[i:]:
 				if 'windows_to_close_names' in t:
-					closeWindows(t['windows_to_close_names'], max_delay=0)
+					threads_number = min(len(t['windows_to_close_names']), cpu_count())
+					ThreadPool(threads_number).map(
+						lambda w: closeWindow(w, max_delay=0), 
+						list(t['windows_to_close_names'])
+					)
+					# closeWindows(t['windows_to_close_names'], max_delay=0)
 
 
 import sys
