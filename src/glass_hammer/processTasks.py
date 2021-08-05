@@ -134,9 +134,13 @@ def processTask(task, input_variables, vizualization_server_address):
 			elif type(c) == dict:
 				command = c['command']
 				window_name = c['window_name']
+				start_additional_args = {
+					'maximize': '/max',
+					'minimize': '/min'
+				}[c['mode']] if 'mode' in c else ''
 				after_command = "timeout -1" if 'dont close' in c else "exit"
 				print(f'executing command "{command}" in new window "{window_name}"')
-				os.system(f'start "{window_name}" cmd /c "{command} & {after_command}"')
+				os.system(f'start {start_additional_args} "{window_name}" cmd /c "{command} & {after_command}"')
 
 	if 'watch_functions_file' in task:
 		watch_functions_module = importModuleFromPath('watch_functions_module', task['watch_functions_file'])
